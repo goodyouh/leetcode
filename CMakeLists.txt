@@ -7,7 +7,7 @@ add_compile_options(/utf-8)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-file(GLOB SOURCE *.cpp)
+file(GLOB SOURCE src/*.cpp)
 
 # 添加源文件
 add_executable(${PROJECT_NAME} ${SOURCE})
