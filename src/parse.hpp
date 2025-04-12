@@ -88,15 +88,19 @@ static ListNode* parsevalue<ListNode*>(const std::string& str) {
 }
 
 
-
+template<typename T>
+static std::remove_reference_t<T> parsevalue_wrapper(const std::string& str) {
+    return parsevalue<std::remove_reference_t<T>>(str);
+}
 
 template<typename... Args, std::size_t... Is>
-static std::tuple<Args...> parse_tuple_helper_impl(const std::vector<std::string>& tokens, std::index_sequence<Is...>) {
-    return std::make_tuple(parsevalue<Args>(tokens[Is])...);
+static std::tuple<std::remove_reference_t<Args>...>
+parse_tuple_helper_impl(const std::vector<std::string>& tokens, std::index_sequence<Is...>) {
+    return std::make_tuple(parsevalue_wrapper<Args>(tokens[Is])...);
 }
 
 template<typename... Args>
-std::tuple<Args...> parse_tuple_helper(const std::vector<std::string>& tokens) {
+std::tuple<std::remove_reference_t<Args>...> parse_tuple_helper(const std::vector<std::string>& tokens) {
     return parse_tuple_helper_impl<Args...>(tokens, std::index_sequence_for<Args...>{});
 }
 

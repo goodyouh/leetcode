@@ -4,7 +4,7 @@ using namespace std;
 
 class Solution {
     public:
-        bool canPartition(vector<int> nums) {
+        bool canPartition(vector<int>& nums) {
             int s = reduce(nums.begin(), nums.end());
             if (s & 1) {
                 return false;
