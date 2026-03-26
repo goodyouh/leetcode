@@ -4,10 +4,10 @@
 
 
 template<typename T>
-struct parsevalue {
-    parsevalue() {};
+struct Parse {
+    Parse() {};
 
-    T operator()(const std::string& str)
+    static T parsevalue(const std::string& str)
     {
 // 默认实现，需要为每种类型特化
         std::istringstream iss(str);
@@ -20,8 +20,8 @@ struct parsevalue {
 };
 
 template<>
-struct parsevalue<std::string> {
-    std::string operator()(const std::string& str)
+struct Parse<std::string> {
+    static std::string parsevalue(const std::string& str)
     {
         if (str.size() >= 2 && str.front() == '"' && str.back() == '"') {
             return str.substr(1, str.length() - 2);
@@ -31,8 +31,8 @@ struct parsevalue<std::string> {
 };
 
 template<typename T>
-struct parsevalue<std::vector<T>> {
-    std::vector<T> operator()(const std::string& str)
+struct Parse<std::vector<T>> {
+    static std::vector<T> parsevalue(const std::string& str)
     {
         std::vector<T> result;
     
@@ -54,7 +54,7 @@ struct parsevalue<std::vector<T>> {
             if (at_end || (c == ',' && level == 0)) {
                 if (i > start) {
                     std::string elem = inner.substr(start, i - start);
-                    result.push_back(parsevalue<T>{}(elem));
+                    result.push_back(Parse<T>::parsevalue(elem));
                 }
                 start = i + 1;
             }
@@ -65,10 +65,10 @@ struct parsevalue<std::vector<T>> {
 };
 
 template<>
-struct parsevalue<TreeNode*> {
-    TreeNode* operator()(const std::string& str)
+struct Parse<TreeNode*> {
+    static TreeNode* parsevalue(const std::string& str)
     {
-        auto nodes = parsevalue<std::vector<std::string>>{}(str);
+        auto nodes = Parse<std::vector<std::string>>::parsevalue(str);
         if (nodes.empty() || nodes[0] == "null") return nullptr;
         TreeNode* root = new TreeNode(std::stoi(nodes[0]));
         std::queue<TreeNode*> q;
@@ -93,10 +93,10 @@ struct parsevalue<TreeNode*> {
 };
 
 template<>
-struct parsevalue<ListNode*> {
-    ListNode* operator()(const std::string& str)
+struct Parse<ListNode*> {
+    static ListNode* parsevalue(const std::string& str)
     {
-        auto nodes = parsevalue<std::vector<int>>{}(str);
+        auto nodes = Parse<std::vector<int>>::parsevalue(str);
         ListNode dummy(0);
         ListNode* current = &dummy;
         for (int val : nodes) {
@@ -112,21 +112,8 @@ struct parsevalue<ListNode*> {
 
 
 template<typename T>
-static std::remove_reference_t<T> parsevalue_wrapper(const std::string& str)
+std::remove_reference_t<T> parsevalue_wrapper(const std::string& str)
 {
-    return parsevalue<std::remove_reference_t<T>>{}(str);
-}
-
-template<typename... Args, std::size_t... Is>
-static std::tuple<std::remove_reference_t<Args>...>
-parse_tuple_helper_impl(const std::vector<std::string>& tokens, std::index_sequence<Is...>)
-{
-    return std::make_tuple(parsevalue_wrapper<Args>(tokens[Is])...);
-}
-
-template<typename... Args>
-std::tuple<std::remove_reference_t<Args>...> parse_tuple_helper(const std::vector<std::string>& tokens)
-{
-    return parse_tuple_helper_impl<Args...>(tokens, std::index_sequence_for<Args...>{});
+    return Parse<std::remove_reference_t<T>>::parsevalue(str);
 }
 
