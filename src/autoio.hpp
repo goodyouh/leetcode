@@ -21,6 +21,15 @@ namespace py_pr {
     {
         return o << "\'" << x << "\'";
     }
+    inline std::ostream& out_put(std::ostream& o, const bool& x)
+    {
+        if (x) {
+            return o << "true";
+        }
+        else {
+            return o << "false";
+        }
+    }
 
     template <typename T1, typename T2>
     inline std::ostream& out_put(std::ostream& o, const std::pair<T1, T2>& x)
@@ -34,29 +43,45 @@ namespace py_pr {
     template <typename T>
     std::ostream& out_put(std::ostream& o, const std::vector<T>& x)
     {
-        o << "[";
-        for (auto it = x.begin(); it != x.end(); ++it) {
-            if (it != x.begin()) {
-                o << ",";
-            }
-            py_pr::out_put(o, *it);
+        if (x.empty()) {
+            return o << "[]";
         }
-        o << "]";
-        return o;
+        o << "[";
+        auto it = x.begin();
+        while (it + 1 != x.end()) {
+            py_pr::out_put(o, *it) << ", ";
+            ++it;
+        }
+        return py_pr::out_put(o, *it) << "]";
     }
 
     template <typename T1, typename T2>
     std::ostream& out_put(std::ostream& o, const std::map<T1, T2>& x)
     {
-        o << "{";
-        for (auto it = x.begin(); it != x.end(); ++it) {
-            if (it != x.begin()) {
-                o << ", ";
-            }
-            py_pr::out_put(o, *it);
+        if (x.empty()) {
+            return o << "{}";
         }
-        o << "}";
-        return o;
+        o << "{";
+        auto it = x.begin();
+        while (it + 1 != x.end()) {
+            py_pr::out_put(o, *it) << ", ";
+            ++it;
+        }
+        return py_pr::out_put(o, *it) << "}";
+    }
+
+    std::ostream& out_put(std::ostream& o, ListNode* phead)
+    {
+        if (phead == nullptr) {
+            return o << "[]";
+        }
+        o << "[";
+        auto pnode = phead;
+        while (pnode->next) {
+            py_pr::out_put(o, pnode->val) << ", ";
+            pnode = pnode->next;
+        }
+        return py_pr::out_put(o, pnode->val) << "]";
     }
 }
 
@@ -97,6 +122,35 @@ void run_case(Ret (Cls::*func)(Args...), const std::vector<std::string>& inputs)
             return (s.*func)(unpacked...);
         };
         Ret res = std::apply(call, args);
-        py_pr::out_put(std::cout, res);
+        py_pr::out_put(std::cout, res) << std::endl;
     }
+}
+
+
+#include <fstream>
+template<typename Ret, typename Cls, typename... Args>
+void run_case(Ret (Cls::*func)(Args...), const std::string& filename) {
+    std::vector<std::string> inputs;
+    std::ifstream file(filename);
+    
+    if (!file.is_open()) {
+        std::cerr << "无法打开文件: " << filename << std::endl;
+        return;
+    }
+    
+    // 逐行读取
+    std::string line;
+    while (std::getline(file, line)) {
+        // 去除首尾空白字符（包括换行符）
+        line.erase(0, line.find_first_not_of(" \t\r\n"));
+        line.erase(line.find_last_not_of(" \t\r\n") + 1);
+        
+        if (!line.empty()) {
+            inputs.push_back(line);
+        }
+    }
+    file.close();
+    
+    // 调用另一个run_case函数
+    run_case(func, inputs);
 }
