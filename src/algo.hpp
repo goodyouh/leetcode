@@ -102,3 +102,34 @@ int seek_origin(int a, int mod) {
 
 
 
+template<int MOD = 1000000007>
+class ModInt {
+    int num;
+public:
+    ModInt(long long n = 0) { n %= MOD; num = n < 0 ? n + MOD : n; }
+    int get() const { return num; }
+
+    ModInt& operator += (const ModInt& other) { return this->operator=(num + other.num); }
+    ModInt operator + (const ModInt& other) const { return ModInt(*this) += other; }
+
+    ModInt& operator -= (const ModInt& other) { return this->operator=(num - other.num); }
+    ModInt operator - (const ModInt& other) const { return ModInt(*this) -= other; }
+
+    ModInt& operator *= (const ModInt& other) { return this->operator=((long long)num * other.num); }
+    ModInt operator * (const ModInt& other) const { return ModInt(*this) *= other; }
+
+    ModInt pow(int exp) const {
+        ModInt ans(1), base(*this);
+        while (exp) {
+            if (exp & 1) {
+                ans *= base;
+            }
+            base *= base;
+            exp >>= 1;
+        }
+        return ans;
+    }
+
+    ModInt& operator /= (const ModInt& other) { return *this *= other.pow(MOD - 2); }
+    ModInt operator / (const ModInt& other) const { return ModInt(*this) /= other; }
+};
