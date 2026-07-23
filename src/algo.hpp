@@ -133,3 +133,98 @@ public:
     ModInt& operator /= (const ModInt& other) { return *this *= other.pow(MOD - 2); }
     ModInt operator / (const ModInt& other) const { return ModInt(*this) /= other; }
 };
+
+
+// 线段树不同的合并策略
+template<typename T>
+struct Max {
+    static constexpr T identity = std::numeric_limits<T>::lowest();
+    T operator()(const T& a, const T& b) const {return std::max(a, b);}
+};
+
+template<typename T>
+struct Min {
+    static constexpr T identity = std::numeric_limits<T>::max();
+    T operator()(const T& a, const T& b) const {return std::min(a, b);}
+};
+
+template<typename T>
+struct Sum {
+    static constexpr T identity = T{};
+    T operator()(const T& a, const T& b) const {return a + b;}
+};
+
+// 线段树
+template<
+    typename T,
+    template<typename> class Merge
+>
+class SegmentTree {
+    std::vector<T> seg;
+    int n;
+
+    void update(int l, int r, int i, int pos, const T& val) {
+        if (l == r) {
+            seg[i] = val;
+            return;
+        }
+        int mid = (l + r) / 2;
+
+        if (pos <= mid){
+            update(l, mid, i * 2, pos, val);
+        }
+        else{
+            update(mid + 1, r, i * 2 + 1, pos, val);
+        }
+
+        seg[i] = Merge<T>{}(seg[i * 2], seg[i * 2 + 1]);
+    }
+
+    T query(int l, int r, int i, int sl, int sr) {
+        if (sl <= l && r <= sr)
+            return seg[i];
+
+        int mid = (l + r) / 2;
+
+        if (sr <= mid){
+            return query(l, mid, i * 2, sl, sr);
+        }
+        else if (sl > mid){
+            return query(mid + 1, r, i * 2 + 1, sl, sr);
+        }
+
+        auto ra = query(mid + 1, r, i * 2 + 1, mid + 1, sr);
+        auto la = query(l, mid, i * 2, sl, mid);
+
+        return Merge<T>{}(la, ra);
+    }
+
+    void build(int l, int r, int i, const std::vector<T>& data) {
+        if (l == r) {
+            seg[i] = data[l];
+            return;
+        }
+
+        int mid = (l + r) / 2;
+        build(l, mid, i * 2, data);
+        build(mid + 1, r, i * 2 + 1, data);
+
+        seg[i] = Merge<T>{}(seg[i * 2], seg[i * 2 + 1]);
+    }
+
+public:
+    SegmentTree(int n) :n(n), seg(n * 4, Merge<T>::identity) {};
+    SegmentTree(const std::vector<T>& data) : n(data.size()), seg(4 * data.size(), Merge<T>::identity) { build(data); }
+
+    void update(int pos, const T& val) {
+        update(0, n - 1, 1, pos, val);
+    }
+    
+    T query(int l, int r) {
+        return query(0, n - 1, 1, l, r);
+    }
+
+    void build(const std::vector<T>& data) {
+        build(0, n - 1, 1, data);
+    }
+};
