@@ -140,6 +140,8 @@ void run_case(Ret (Cls::*func)(Args...), const std::string& filename) {
     
     // 逐行读取
     std::string line;
+    constexpr std::size_t ArgCount = sizeof...(Args);
+
     while (std::getline(file, line)) {
         // 去除首尾空白字符（包括换行符）
         line.erase(0, line.find_first_not_of(" \t\r\n"));
@@ -148,9 +150,12 @@ void run_case(Ret (Cls::*func)(Args...), const std::string& filename) {
         if (!line.empty()) {
             inputs.push_back(line);
         }
+
+        if (inputs.size() == ArgCount) {
+            run_case(func, inputs);
+            inputs.clear();   // 下一组参数
+            std::cout << std::endl;
+        }
     }
     file.close();
-    
-    // 调用另一个run_case函数
-    run_case(func, inputs);
 }
